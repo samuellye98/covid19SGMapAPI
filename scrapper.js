@@ -57,42 +57,46 @@ const getResults = async () => {
     casesTable[caseId] = tableRow;
   });
 
+  // Creating cluster geoJSON data
+  const geoTableByClusters = {
+    type: 'FeatureCollection',
+    features: [],
+  };
   // Appending cluster to relevant cases
   const clusterData = require('./clusters.json');
   for (var i = 0; i < clusterData.length; i++) {
     var clusterObj = clusterData[i];
     var clusterObjCases = clusterObj['cases'];
     var clusterObjCoordinates = clusterObj['coordinates'];
+    var clusterLocation = clusterObj['location'];
+
+    var geoCase = {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: clusterObjCoordinates },
+      properties: {
+        location: clusterLocation,
+        cases: [],
+        numCases: 0,
+      },
+    };
 
     for (var k = 0; k < clusterObjCases.length; k++) {
-      var geoCase = {
-        type: 'Feature',
-        geometry: { type: 'Point', coordinates: [] },
-      };
-
       var tempCase = clusterObjCases[k].toString();
-      casesTable[tempCase].cluster = clusterObj.location;
-
-      geoCase['geometry'].coordinates = clusterObjCoordinates;
-      geoCase['properties'] = casesTable[tempCase];
-      geoTableByCases['features'].push(geoCase);
+      geoCase['properties'].cases.push(casesTable[tempCase]);
     }
+
+    geoCase['properties'].numCases = geoCase['properties'].cases.length;
+    geoTableByClusters['features'].push(geoCase);
   }
 
-  // Creating cluster geoJSON data
-  const geoTableByClusters = {
-    type: 'FeatureCollection',
-    features: [],
-  };
-
   // Write JSON file
-  var casesJSON = JSON.stringify(geoTableByCases);
+  var casesJSON = JSON.stringify(geoTableByClusters);
   fs.writeFileSync('./scrapedCases.json', casesJSON, 'utf-8');
 
-  console.log('Scrape Complete', geoTableByCases['features'].length);
+  console.log('Scrape Complete');
 
   // Data to send to client-side
-  return geoTableByCases;
+  return geoTableByClusters;
 };
 
 module.exports = getResults;
