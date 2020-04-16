@@ -82,6 +82,7 @@ const getResults = async () => {
 
     for (var k = 0; k < clusterObjCases.length; k++) {
       var tempCase = clusterObjCases[k].toString();
+      casesTable[tempCase].cluster = clusterObj.location;
       geoCase['properties'].cases.push(casesTable[tempCase]);
     }
 
